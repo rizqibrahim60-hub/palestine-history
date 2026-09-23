@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>موسوعة التاريخ الفلسطيني والحروب العربية - 200 سؤال مباشر</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&family=Almarai:wght@700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Cairo', 'Almarai', sans-serif; }
+        body { background-color: #051329; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        
+        .main-controls { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; background: #08162e; padding: 10px 20px; border-radius: 50px; border: 1px solid #d4af37; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 1000; align-items: center; }
+        .btn-ctrl { border: none; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 800; cursor: pointer; color: #ffffff; transition: all 0.2s ease; }
+        .btn-nav { background: #1e3a8a; } 
+        .btn-pdf { background: #0284c7; } 
+        .btn-img { background: #10b981; } 
+        .btn-pen { background: #b45309; } 
+        .btn-pen.active { background: #d97706; border: 2px solid #fff; box-shadow: 0 0 10px #d97706; }
+        .btn-reset-ans { background: #d97706; }
+        .btn-delete-q { background: #dc2626; }
+        .btn-print-all { background: #d97706; color: #ffffff; }
+        .btn-save-file { background: #7c3aed; }
+
+        .pen-toolbar { display: none; gap: 12px; margin-bottom: 15px; background: #111d38; padding: 8px 22px; border-radius: 30px; border: 1.5px solid #10b981; align-items: center; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .color-dot { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #fff; cursor: pointer; display: inline-block; transition: 0.2s; }
+        .color-dot.selected { transform: scale(1.25); border-width: 3px; border-color: #ffd700; }
+        .pen-size-select { background: #051329; color: #fff; border: 1px solid #d4af37; padding: 4px 12px; border-radius: 10px; font-weight: bold; font-size: 13px; }
+        .btn-clear-canvas { background: #ef4444; color: white; border: none; padding: 6px 14px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 12px; transition: 0.2s; }
+        .btn-clear-canvas:hover { background: #dc2626; }
+
+        #quiz-app-wrapper { position: relative; width: 100%; max-width: 980px; }
+        
+        #quiz-app { width: 100%; background: #ffffff; border-radius: 24px; overflow: hidden; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6); border: 4px solid #081d3d; display: flex; flex-direction: column; justify-content: space-between; }
+        
+        #drawCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 500; touch-action: none; border-radius: 24px; }
+        #drawCanvas.drawing-active { 
+            pointer-events: auto; 
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="%23ffd700" stroke="%23051329" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>') 2 32, crosshair; 
+        }
+
+        .top-header {
+            background: linear-gradient(180deg, #071c3d 0%, #0d2859 100%);
+            padding: 18px 30px;
+            color: #ffffff;
+            border-bottom: 4px solid #00a8e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-center { text-align: center; flex-grow: 1; }
+        .main-title { font-size: 20px; font-weight: 900; color: #ffffff; line-height: 1.2; }
+        .sub-title { color: #00b4d8; font-size: 13px; font-weight: 700; margin-top: 3px; }
+        .author-name { color: #ffffff; font-size: 14px; font-weight: 800; margin-top: 4px; }
+        .header-icon-circle { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #5279a4; background: rgba(255, 255, 255, 0.05); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+        .progress-bar-container { background: #e2e8f0; height: 6px; width: 100%; }
+        .progress-bar { background: #10b981; height: 100%; width: 1%; transition: width 0.2s ease; }
+
+        .status-row { display: flex; justify-content: space-between; padding: 12px 40px 0 40px; font-size: 15px; font-weight: 900; color: #0d2859; }
+
+        .card-body { padding: 20px 40px 30px 40px; flex-grow: 1; display: flex; flex-direction: column; gap: 16px; justify-content: center; }
+
+        .main-question-card { border: 2.5px solid #0d2859; border-radius: 18px; padding: 18px 24px; background: #ffffff; box-shadow: 0 4px 15px rgba(13, 40, 89, 0.04); }
+        .question-header-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+        .q-right-group { display: flex; align-items: center; gap: 15px; flex-grow: 1; }
+        .badge-q-tag { background: #0a214d; color: #ffffff; padding: 7px 18px; border-radius: 10px; font-size: 17px; font-weight: 800; white-space: nowrap; }
+        .q-text-content { font-size: 18px; font-weight: 800; color: #0f172a; line-height: 1.4; }
+
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .opt-btn { background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 12px; padding: 12px 18px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: 0.2s ease; text-align: right; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
+        .opt-btn:hover:not([disabled]) { border-color: #0284c7; background: #f0f9ff; transform: translateY(-2px); }
+        .opt-letter { width: 32px; height: 32px; background: #e2e8f0; color: #0f2c59; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 15px; flex-shrink: 0; margin-right: 12px; }
+        .opt-text { font-size: 15px; font-weight: 800; color: #1e293b; flex-grow: 1; }
+
+        .opt-btn.correct { background: #ecfdf5 !important; border-color: #10b981 !important; }
+        .opt-btn.correct .opt-letter { background: #10b981 !important; color: #ffffff !important; }
+        .opt-btn.wrong { background: #fef2f2 !important; border-color: #ef4444 !important; }
+        .opt-btn.wrong .opt-letter { background: #ef4444 !important; color: #ffffff !important; }
+
+        .check-mark {
+            font-size: 20px;
+            font-weight: 900;
+            color: #10b981;
+            margin-right: auto;
+            margin-left: 10px;
+            background: #d1fae5;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1.5px solid #10b981;
+        }
+
+        #result-screen { display: none; text-align: center; padding: 40px 20px; }
+        .result-score { font-size: 48px; font-weight: 900; color: #10b981; margin: 15px 0; }
+        .btn-restart { background: #0f2c59; color: #ffffff; border: none; padding: 12px 35px; border-radius: 25px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 20px; }
+
+        .bottom-footer {
+            background: linear-gradient(180deg, #071c3d 0%, #0d2859 100%);
+            border-top: 4px solid #00a8e8;
+            padding: 12px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ffffff;
+        }
+
+        .footer-sec { display: flex; align-items: center; gap: 10px; }
+        .footer-sec-center { text-align: center; }
+        .footer-icon-circle { width: 40px; height: 40px; background: rgba(0, 180, 216, 0.12); border: 1.5px solid #00a8e8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; color: #00b4d8; }
+        .footer-meta { display: flex; flex-direction: column; }
+        .footer-text-title { font-size: 11px; color: #90e0ef; font-weight: 700; }
+        .footer-text-val { font-size: 14px; font-weight: 900; direction: ltr; color: #caf0f8; letter-spacing: 0.5px; }
+        .footer-author-main { font-size: 17px; font-weight: 900; color: #ffffff; }
+
+        @media print {
+            body { background: none; padding: 0; }
+            .main-controls, .pen-toolbar, .progress-bar-container, .status-row, #drawCanvas { display: none !important; }
+            #quiz-app { box-shadow: none; border: 2px solid #081d3d; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-controls">
+        <button class="btn-ctrl btn-nav" id="btn-prev" onclick="prevQ()">➔ السابق</button>
+        <button class="btn-ctrl btn-pen" id="penToggleBtn" onclick="togglePen()">✏️ قلم الشرح الحقيقي</button>
+        <button class="btn-ctrl btn-nav" id="btn-next" onclick="nextQ()">التالي ⬅</button>
+        <div style="width:1px; height:20px; background:#d4af37;"></div>
+        <button class="btn-ctrl btn-pdf" onclick="window.print()">📄 طباعة السؤال الحالي PDF</button>
+        <button class="btn-ctrl btn-print-all" onclick="printAllQuestionsPDF()">🖨️ تصدير الكل PDF</button>
+        <button class="btn-ctrl btn-img" onclick="exportImage()">🖼️ تصدير صورة مميزة الإجابة PNG</button>
+        <button class="btn-ctrl btn-save-file" onclick="saveModifiedFile()">💾 حفظ التعديلات في ملف</button>
+        <button class="btn-ctrl btn-reset-ans" onclick="resetCurrentAnswer()">🔄 مسح الإجابة</button>
+        <button class="btn-ctrl btn-delete-q" onclick="deleteCurrentQuestion()">❌ حذف السؤال</button>
+    </div>
+
+    <div class="pen-toolbar" id="penToolbar">
+        <span style="color:#d4af37; font-weight:bold; font-size:13px;">الألوان:</span>
+        <span class="color-dot selected" style="background: #e11d48;" onclick="setPenColor('#e11d48', this)" title="أحمر"></span>
+        <span class="color-dot" style="background: #2563eb;" onclick="setPenColor('#2563eb', this)" title="أزرق"></span>
+        <span class="color-dot" style="background: #16a34a;" onclick="setPenColor('#16a34a', this)" title="أخضر"></span>
+        <span class="color-dot" style="background: #ffd700;" onclick="setPenColor('#ffd700', this)" title="ذهبي"></span>
+        <span class="color-dot" style="background: #ffffff;" onclick="setPenColor('#ffffff', this)" title="أبيض"></span>
+
+        <span style="color:#d4af37; font-weight:bold; font-size:13px; margin-right:5px;">السماكة:</span>
+        <select class="pen-size-select" id="penSizeSelect" onchange="setPenSize(this.value)">
+            <option value="1.5">خط رفيع دقيق</option>
+            <option value="2.5" selected>قلم حقيقي مثالي</option>
+            <option value="5">قلم كتابة واضح</option>
+            <option value="12">قلم تظليل عريض</option>
+        </select>
+
+        <button class="btn-clear-canvas" onclick="clearCanvas()">🗑️ مسح الخطوط</button>
+    </div>
+
+    <div id="quiz-app-wrapper">
+        <canvas id="drawCanvas" width="980" height="561"></canvas>
+        <div id="quiz-app">
+            <div class="top-header">
+                <div class="header-icon-circle">🇵🇸</div>
+                <div class="header-center">
+                    <div class="main-title">موسوعة التاريخ الفلسطيني والحروب العربية (<span id="total-q-badge">200</span> سؤال)</div>
+                    <div class="sub-title">أهم الأحداث، الحروب، المعاهدات، والشخصيات</div>
+                    <div class="author-name">إبراهيم أبوزيد | معلّم ومدرب وباحث</div>
+                </div>
+                <div class="header-icon-circle">🕊️</div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 1%;"></div>
+            </div>
+
+            <div id="quiz-screen">
+                <div class="status-row">
+                    <span id="question-count">السؤال 1 من 200</span>
+                    <span id="score-count">النقاط: 0</span>
+                </div>
+
+                <div class="card-body">
+                    <div class="main-question-card">
+                        <div class="question-header-row">
+                            <div class="q-right-group">
+                                <div class="badge-q-tag" id="q-badge">السؤال 1</div>
+                                <div class="q-text-content" id="q-text">جاري تحميل الأسئلة...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="options-grid" id="options-container"></div>
+                </div>
+            </div>
+
+            <div id="result-screen">
+                <h2 style="font-size: 28px; color: #0f2c59; font-weight: 900;">اكتمل اختبار التاريخ الفلسطيني بنجاح!</h2>
+                <div class="result-score" id="final-score">0 / 200</div>
+                <p id="result-message" style="font-size: 18px; font-weight: 700; color: #475569;"></p>
+                <button class="btn-restart" onclick="restartQuiz()">إعادة الاختبار 🔄</button>
+            </div>
+
+            <div class="bottom-footer">
+                <div class="footer-sec" style="direction: ltr;">
+                    <div class="header-icon-circle" style="width:40px; height:40px; font-size:18px;">✈</div>
+                    <div class="footer-meta" style="text-align: left;">
+                        <span class="footer-text-title">حساب تليجرام</span>
+                        <span class="footer-text-val">t.me/myibhistoricy</span>
+                    </div>
+                </div>
+
+                <div class="footer-sec-center">
+                    <div class="footer-author-main">إبراهيم أبوزيد</div>
+                </div>
+
+                <div class="footer-sec">
+                    <div class="footer-meta" style="text-align: right;">
+                        <span class="footer-text-title">رقم الهاتف</span>
+                        <span class="footer-text-val">966 55 783 1353</span>
+                    </div>
+                    <div class="header-icon-circle" style="width:40px; height:40px; font-size:18px;">📞</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        var rawCardsData = [
+            { "q": "ما هو اسم الوعد البريطاني الصادر سنة 1917 لإقامة وطن قومي لليهود في فلسطين؟", "options": ["وعد بلفور", "صك الانتداب", "اتفاقية سايكس بيكو", "تصريح تشمبرلين"], "correct": 0 },
+            { "q": "في أي سنة فُرض الانتداب البريطاني رسمياً على فلسطين؟", "options": ["1920 م", "1917 م", "1922 م", "1948 م"], "correct": 0 },
+            { "q": "من هو قائد الثورة الفلسطينية الكبرى (1936 - 1939)؟", "options": ["الحاج أمين الحسيني", "الشيخ عز الدين القسام", "عبد القادر الحسيني", "فرحان السعدي"], "correct": 0 },
+            { "q": "في أي عام أصدرت الأمم المتحدة قرار تقسيم فلسطين إلى دولتين؟", "options": ["1947 م", "1948 م", "1937 م", "1922 م"], "correct": 0 },
+            { "q": "متى أُعلن رسمياً قيام دولة إسرائيل على أرض فلسطين؟", "options": ["15 مايو 1948", "29 نوفمبر 1947", "5 يونيو 1967", "6 أكتوبر 1973"], "correct": 0 },
+            { "q": "ماذا يطلق على تهجير مئات الآلاف من الفلسطينيين سنة 1948؟", "options": ["النكبة", "النكسة", "يوم الأرض", "الهجرة الكبرى"], "correct": 0 },
+            { "q": "ما هي الحرب العربية الإسرائيلية الأولى سنة 1948؟", "options": ["حرب فلسطين 1948", "حرب السويس", "حرب الاستنزاف", "حرب أكتوبر"], "correct": 0 },
+            { "q": "من هو القائد الفلسطيني الذي استشهد في معركة القسطل سنة 1948؟", "options": ["عبد القادر الحسيني", "أحمد عبد العزيز", "حسن سلامة", "فوزي القاوقجي"], "correct": 0 },
+            { "q": "في أي قرية فلسطينية وقعت المجزرة الشهيرة دير ياسين في أبريل 1948؟", "options": ["دير ياسين", "كفر قاسم", "قانا", "القبية"], "correct": 0 },
+            { "q": "في أي عام تأسست منظمة التحرير الفلسطينية؟", "options": ["1964 م", "1948 م", "1967 م", "1987 م"], "correct": 0 },
+            { "q": "من هو أول رئيس للجنة التنفيذية لمنظمة التحرير الفلسطينية؟", "options": ["أحمد الشقيري", "ياسر عرفات", "محمود عباس", "قاسم الريماوي"], "correct": 0 },
+            { "q": "متى وقعت حرب النكسة واحتلال الضفة الغربية وقطاع غزة؟", "options": ["5 يونيو 1967", "15 مايو 1948", "6 أكتوبر 1973", "29 أكتوبر 1956"], "correct": 0 },
+            { "q": "ما هو رقم قرار مجلس الأمن الدولي الذي يدعو للانسحاب الإسرائيلي بعد حرب 1967؟", "options": ["قرار 242", "قرار 338", "قرار 181", "قرار 194"], "correct": 0 },
+            { "q": "ما هي المعركة التي انتصر فيها الجيش الأردني والمقاومة على إسرائيل سنة 1968؟", "options": ["معركة الكرامة", "معركة باب الواد", "معركة اللترون", "معركة القسطل"], "correct": 0 },
+            { "q": "متى اندلعت حرب أكتوبر بين مصر وسوريا ضد إسرائيل؟", "options": ["6 أكتوبر 1973", "5 يونيو 1967", "29 أكتوبر 1956", "21 مارس 1968"], "correct": 0 },
+            { "q": "ما هو رقم قرار مجلس الأمن الصادر لوقف إطلاق النار في حرب أكتوبر 1973؟", "options": ["قرار 338", "قرار 242", "قرار 194", "قرار 181"], "correct": 0 },
+            { "q": "ما هي معاهدة السلام الأولى التي وقعتها مصر مع إسرائيل سنة 1979؟", "options": ["معاهدة كامب ديفيد", "اتفاقية أوسلو", "معاهدة وادي عربة", "اتفاقيات إبراهام"], "correct": 0 },
+            { "q": "في أي عام اجتاحت إسرائيل لبنان وحاصرت بيروت؟", "options": ["1982 م", "1978 م", "1967 م", "1973 م"], "correct": 0 },
+            { "q": "متى انطلقت الانتفاضة الفلسطينية الأولى (انتفاضة الحجارة)؟", "options": ["8 ديسمبر 1987", "30 مارس 1976", "28 سبتمبر 2000", "1 يناير 1965"], "correct": 0 },
+            { "q": "من هو مؤسس حركة المقاومة الإسلامية (حماس) سنة 1987؟", "options": ["الشيخ أحمد ياسين", "عبد العزيز الرنتيسي", "إبراهيم المقادمة", "صلاح شحادة"], "correct": 0 },
+            { "q": "من هو مؤسس الجبهة الشعبية لتحرير فلسطين سنة 1967؟", "options": ["جورج حبش", "نايف حواتمة", "أحمد جبريل", "كمال ناصر"], "correct": 0 },
+            { "q": "متى أُعلن عن قيام دولة فلسطين ووثيقة الاستقلال في الجزائر؟", "options": ["15 نوفمبر 1988", "15 مايو 1948", "13 سبتمبر 1993", "4 مايو 1994"], "correct": 0 },
+            { "q": "ما هو مؤتمر السلام الدولي الذي عقد في إسبانيا سنة 1991؟", "options": ["مؤتمر مدريد للسلام", "قمة بيروت", "اتفاقية أوسلو", "مؤتمر كامب ديفيد"], "correct": 0 },
+            { "q": "متى تم توقيع اتفاقية أوسلو بين منظمة التحرير وإسرائيل في واشنطن؟", "options": ["13 سبتمبر 1993", "26 أكتوبر 1994", "15 نوفمبر 1988", "4 مايو 1994"], "correct": 0 },
+            { "q": "ما هي معاهدة السلام التي وقعها الأردن مع إسرائيل سنة 1994؟", "options": ["معاهدة وادي عربة", "معاهدة كامب ديفيد", "اتفاقية أوسلو", "اتفاقية طابا"], "correct": 0 },
+            { "q": "متى انطلقت الانتفاضة الفلسطينية الثانية (انتفاضة الأقصى)؟", "options": ["28 سبتمبر 2000", "8 ديسمبر 1987", "30 مارس 1976", "1 يناير 2002"], "correct": 0 },
+            { "q": "في أي عام انسحب الاحتلال الإسرائيلي من قطاع غزة؟", "options": ["2005 م", "2000 م", "2007 م", "1994 م"], "correct": 0 },
+            { "q": "متى نالت فلسطين صفة دولة مراقب غير عضو في الأمم المتحدة؟", "options": ["29 نوفمبر 2012", "15 نوفمبر 1988", "23 ديسمبر 2016", "30 مارس 2018"], correct: 0 },
+            { "q": "ما هي اتفاقيات التطبيع الدبلوماسي العربي مع إسرائيل سنة 2020؟", "options": ["اتفاقيات إبراهام", "اتفاقية أوسلو", "معاهدة وادي عربة", "مبادرة السلام العربية"], "correct": 0 },
+            { "q": "متى يصادف يوم الأرض الفلسطيني الخالد؟", "options": ["30 مارس 1976", "15 مايو 1948", "5 يونيو 1967", "8 ديسمبر 1987"], correct: 0 },
+            { "q": "في أي عام تأسست حركة التحرير الوطني الفلسطيني (فتح)؟", "options": ["1965 م", "1948 م", "1964 م", "1987 م"], correct: 0 },
+            { "q": "من هو أول رئيس للسلطة الوطنية الفلسطينية؟", "options": ["ياسر عرفات", "محمود عباس", "أحمد الشقيري", "روحي فتوح"], correct: 0 },
+            { "q": "في أي عام استشهد الزعيم الفلسطيني ياسر عرفات في رام الله؟", "options": ["2004 م", "2002 م", "2006 م", "1993 م"], correct: 0 },
+            { "q": "ما هو القرار الأممي الصادر سنة 1948 ونص على حق عودة اللاجئين الفلسطينيين؟", options: ["قرار الجمعية العامة 194", "قرار مجلس الأمن 242", "قرار 181", "قرار 338"], correct: 0 },
+            { "q": "ما اسم المعبر الحدودي الرئيسي الذي يربط قطاع غزة بمصر؟", options: ["معبر رفح", "معبر بيت حانون", "معبر كرم أبو سالم", "معبر العوجا"], correct: 0 },
+            { "q": "في أي عام تم توقيع اتفاقية طابا (أوسلو 2) لإدارة الحكم الذاتي؟", options: ["1995 م", "1993 م", "1994 م", "2000 م"], correct: 0 },
+            { "q": "ما هو اسم الجدار الفاصل الذي أقامته إسرائيل داخل الضفة الغربية؟", options: ["جدار الفصل العنصري", "خط بارليف", "خط ألون", "السور الواقي"], correct: 0 },
+            { "q": "من هو القائد العام لكتائب الشهيد عز الدين القسام الأسبق؟", options: ["صلاح شحادة", "محمد الضيف", "أحمد الجعبري", "يحيى عياش"], correct: 0 },
+            { "q": "في أي عام وقعت معركة الكرامة الخالدة؟", options: ["1968 م", "1967 م", "1973 م", "1948 م"], correct: 0 },
+            { "q": "ما هي الدولة العربية الأولى التي وقعت اتفاقية سلام رسمية مع إسرائيل؟", options: ["مصر", "الأردن", "الإمارات", "لبنان"], correct: 0 },
+            { "q": "متى أُسست الجبهة الديمقراطية لتحرير فلسطين؟", options: ["1969 م", "1967 م", "1965 م", "1970 م"], correct: 0 },
+            { "q": "من هو قسام فلسطين الأول وقائد ثورة 1936؟", options: ["الشيخ عز الدين القسام", "الحاج أمين الحسيني", "عبد القادر الحسيني", "فرحان السعدي"], correct: 0 },
+            { "q": "في أي عام تم توقيع بروتوكول باريس الاقتصادي؟", options: ["1994 م", "1993 م", "1995 م", "1991 م"], correct: 0 },
+            { "q": "في أي عام قامت ثورة البراق في فلسطين؟", options: ["1929 م", "1936 م", "1948 م", "1917 م"], correct: 0 },
+            { "q": "من هو مفتي فلسطين ورئيس الهيئة العربية العليا أثناء حرب 1948؟", options: ["الحاج أمين الحسيني", "أحمد الشقيري", "ياسر عرفات", "عز الدين القسام"], correct: 0 },
+            { "q": "ما اسم الخط الدفاعي الإسرائيلي الذي دمره الجيش المصري في حرب أكتوبر 1973؟", options: ["خط بارليف", "خط ألون", "خط الهدنة", "السور الواقي"], correct: 0 },
+            { "q": "ما هو اسم الخط الدفاعي الإسرائيلي في هضبة الجولان المحتلة؟", options: ["خط ألون", "خط بارليف", "خط الفصيل", "خط الحدود"], correct: 0 },
+            { "q": "متى أُسست حركة الجهاد الإسلامي في فلسطين؟", options: ["1981 م", "1987 م", "1967 م", "1974 م"], correct: 0 },
+            { "q": "من هو مؤسس حركة الجهاد الإسلامي في فلسطين؟", options: ["الشيخ فتحي الشقاقي", "أحمد ياسين", "فتحي العبد الله", "صلاح شحادة"], correct: 0 },
+            { "q": "من هو الشاعر الفلسطيني العالمي الذي لُقب بشاعر الأرض والوطن؟", options: ["محمود درويش", "توفيق زياد", "سميح القاسم", "معين بسيسو"], correct: 0 },
+            { "q": "ما هي الدول العربية الثلاث التي شاركت رئيسياً في حرب 1948 بجانب مصر والأردن وسوريا؟", options: ["العراق، لبنان، والمتطوعون العرب", "السعودية فقط", "المغرب والجزائر", "تونس وليبيا"], correct: 0 },
+            { "q": "في أي عام وقع العدوان الثلاثي (المصري البريطاني الفرنسي الإسرائيلي) على مصر؟", options: ["29 أكتوبر 1956", "5 يونيو 1967", "6 أكتوبر 1973", "29 أكتوبر 1948"], correct: 0 },
+            { "q": "ما هي المدن المصرية التي تعرضت للعدوان الثلاثي سنة 1956؟", options: ["بورسعيد، الإسماعيلية، والسويس", "القاهرة والإسكندرية", "أسوان والسويس", "العريش ورفح"], correct: 0 },
+            { "q": "من هو الرئيس المصري الذي أعلن تأميم قناة السويس سنة 1956؟", options: ["جمال عبد الناصر", "محمد أنور السادات", "محمد نجيب", "الملك فاروق"], correct: 0 },
+            { "q": "ما هو اسم القوة الدولية التي أُسست ونشرت على الحدود المصرية بعد عدوان 1956؟", options: ["قوات الطوارئ الدولية (UNEF)", "قوات حفظ السلام", "قوات التحالف", "الدرع العربي"], correct: 0 },
+            { "q": "ما هي الدول العربية التي شاركت في حرب الاستنزاف ضد إسرائيل (1967-1970)؟", options: ["مصر، الأردن، سوريا، ومنظمة التحرير", "العراق فقط", "السعودية ومصر", "لبنان وسوريا"], correct: 0 },
+            { "q": "ما اسم العملية الجوية الأولى التي نفذتها مصر وسوريا لبدء حرب أكتوبر 1973؟", options: ["الضربة الجوية الشاملة / العبور", "عملية سيناء", "حرب الاستنزاف", "عملية بدر"], correct: 0 },
+            { "q": "من هو وزير الدفاع المصري أثناء حرب أكتوبر 1973؟", options: ["المشير أحمد إسماعيل علي", "عبد الحليم أبو غزالة", "محمد حسين طنطاوي", "عبد الفتاح السيسي"], correct: 0 },
+            { "q": "من هو رئيس أركان الجيش المصري أثناء حرب أكتوبر 1973؟", options: ["الفريق سعد الدين الشاذلي", "محمد عبد الغني الجمسي", "أحمد بدوي", "عبد المنعم رياض"], correct: 0 },
+            { "q": "ما هو اسم اتفاقية فصل القوات الأولى بين مصر وإسرائيل سنة 1974؟", options: ["اتفاقية فصل القوات الأولى (يناير 1974)", "اتفاقية سيناء", "اتفاقية كامب ديفيد", "اتفاقية أوسلو"], correct: 0 },
+            { "q": "ما هو اسم اتفاقية فصل القوات الثانية بين مصر وإسرائيل سنة 1975؟", options: ["اتفاقية سيناء الثانية (سبتمبر 1975)", "اتفاقية طابا", "اتفاقية الكرامة", "اتفاقية السلام"], correct: 0 },
+            { "q": "في أي مدينة أمريكية تم توقيع اتفاقية الإطار للسلام بين مصر وإسرائيل سنة 1978؟", options: ["كامب ديفيد", "واشنطن", "نيويورك", "تكساس"], correct: 0 },
+            { "q": "من هم الزعماء الثلاثة الذين وقعوا اتفاقية كامب ديفيد سنة 1978؟", options: ["أنور السادات، مناحيم بيغن، وجيمي كارتر", "جمال عبد الناصر، ديغول، وفورد", "ياسر عرفات، رابين، وكلينتون", "الملك حسين، بيريز، وبوش"], correct: 0 },
+            { "q": "ما هي النتائج السياسية التي تعرضت لها مصر من الجامعة العربية بعد كامب ديفيد؟", options: ["تعليق عضوية مصر ونقل المقر لتونس", "طرد مصر نهائياً", "فرض عقوبات اقتصادية", "إلغاء التمثيل الدبلوماسي مع العرب"], correct: 0 },
+            { "q": "في أي عام تم استعادة عضوية مصر الكاملة في جامعة الدول العربية؟", options: ["1989 م", "1984 م", "1991 م", "1979 م"], correct: 0 },
+            { "q": "متى استردت مصر كامل شبه جزيرة سيناء عدا طابا؟", options: ["25 أبريل 1982", "6 أكتوبر 1973", "25 مارس 1979", "19 مارس 1989"], correct: 0 },
+            { "q": "في أي عام تم استعادة مدينة طابا المصرية نهائياً عبر التحكيم؟", options: ["مارس 1989", "أبريل 1982", "يناير 1991", "مايو 1985"], correct: 0 },
+            { "q": "ما هو مؤتمر القمة العربية الذي أقر 'مبادرة السلام العربية' سنة 2002؟", options: ["قمة بيروت العربية 2002", "قمة القاهرة 2000", "قمة عمان 2001", "قمة الجزائر 2005"], correct: 0 },
+            { "q": "من هو الزعيم العربي الذي طرح مبادرة السلام العربية في قمة بيروت 2002؟", options: ["الملك عبد الله بن عبد العزيز", "الملك فهد بن عبد العزيز", "الشيخ زايد", "الرئيس حسني مبارك"], correct: 0 },
+            { "q": "في أي عام حدث الاجتياح الإسرائيلي للضفة الغربية بعملية 'السور الواقي'؟", options: ["2002 م", "2000 م", "2004 م", "2007 م"], correct: 0 },
+            { "q": "ما هي المعركة البرية الأبرز في مخيم جنين ضد عملية السور الواقي؟", options: ["معركة مخيم جنين 2002", "معركة الكرامة", "معركة القسطل", "معركة باب الواد"], correct: 0 },
+            { "q": "من هو القائد العسكري الفلسطيني الذي استشهد في معركة مخيم جنين 2002؟", options: ["الشهيد محمود طوالبة", "إبراهيم النابلسي", "صلاح شحادة", "عماد عقل"], correct: 0 },
+            { "q": "ما هو اسم الحرب الإسرائيلية على غزة أواخر 2008 ومطلع 2009؟", options: ["حرب الرصاص المصبوب (الفرقان)", "عمود السحاب", "الجرف الصامد", "سيف القدس"], correct: 0 },
+            { "q": "ما هو اسم العدوان الإسرائيلي على غزة سنة 2012؟", options: ["عملية عمود السحاب", "الرصاص المصبوب", "الجرف الصامد", "طوفان الأقصى"], correct: 0 },
+            { "q": "ما هو اسم العدوان الإسرائيلي الأطول على غزة سنة 2014؟", options: ["عملية الجرف الصامد", "عمود السحاب", "الرصاص المصبوب", "حارس الأسوار"], correct: 0 },
+            { "q": "ما هي المواجهة العسكرية الكبرى في مايو 2021 بين المقاومة وإسرائيل؟", options: ["معركة سيف القدس", "حرب الاستنزاف", "معركة الكرامة", "حرب أكتوبر"], correct: 0 },
+            { "q": "ما هي الدولة العربية التي وقعت اتفاق سلام مع إسرائيل في أيلول 2020 بجانب الإمارات؟", options: ["مملكة البحرين", "السودان", "المغرب", "مصر"], correct: 0 },
+            { "q": "ما هي الدولة العربية الثالثة التي وقعت اتفاق تطبيع مع إسرائيل سنة 2020؟", options: ["السودان", "البحرين", "المغرب", "الأردن"], correct: 0 },
+            { "q": "ما هي الدولة العربية الرابعة التي أعلنت استئناف علاقاتها مع إسرائيل سنة 2020؟", options: ["المملكة المغربية", "البحرين", "السودان", "موريتانيا"], correct: 0 },
+            { "q": "في أي عام وقع لبنان وإسرائيل اتفاقية ترسيم الحدود البحرية الجنوبية؟", options: ["2022 م", "2020 م", "2018 م", "2023 م"], correct: 0 },
+            { "q": "ما هو اسم حقل الغاز البحري المتنازع عليه في الاتفاقية البحرية اللبنانية؟", options: ["حقل كاريش وحقل قانا", "حقل ظهر", "حقل غزة مارين", "حقل ليفياثان"], correct: 0 },
+            { "q": "ما هي المعاهدة التي استعاد بموجبها الأردن سيطرته على منطقتي الباقورة ومالح؟", options: ["ملحقي معاهدة وادي عربة (2019)", "اتفاقية أوسلو", "معاهدة السلام المصرية", "اتفاقية طابا"], correct: 0 },
+            { "q": "متى انسحب الجيش الإسرائيلي من جنوب لبنان كلياً (تاريخ التحرير)؟", options: ["25 مايو 2000", "25 أبريل 1982", "6 أكتوبر 1973", "5 يونيو 1967"], correct: 0 },
+            { "q": "ما هي الحرب التي خاضها حزب الله ضد إسرائيل في صيف 2006؟", options: ["حرب تموز 2006 (حرب لبنان الثانية)", "حرب الاستنزاف", "حرب لبنان الأولى", "حرب غزة"], correct: 0 },
+            { "q": "من هو رئيس وزراء إسرائيل الأسبق الذي وقع وادي عربة مع الأردن؟", options: ["إسحاق رابين", "مناحيم بيغن", "أرييل شارون", "بنيامين نتنياهو"], correct: 0 },
+            { "q": "من هو رئيس وزراء إسرائيل الذي أمر بالانسحاب من غزة سنة 2005؟", options: ["أرييل شارون", "إسحاق رابين", "إيهود باراك", "شمعون بيريز"], correct: 0 },
+            { "q": "في أي عام توقيع اتفاقيات فض الاشتباك السورية الإسرائيلية في الجولان؟", options: ["1974 م", "1973 م", "1979 م", "1967 م"], correct: 0 },
+            { "q": "ما اسم خط وقف إطلاق النار الفاصل بين سوريا وإسرائيل في الجولان؟", options: ["خط الفصيل (خط الهدنة 1974)", "خط بارليف", "خط ألون", "السور الواقي"], correct: 0 },
+            { "q": "ما هي الدولة العربية التي استضافت قمة مقاطعة مصر سنة 1978؟", options: ["العراق (قمة بغداد)", "سوريا", "ليبيا", "الجزائر"], correct: 0 },
+            { "q": "ما هي المبادرة العربية للسلام التي تبنتها قمة فاس سنة 1982؟", options: ["مبادرة الملك فهد للسلام", "مبادرة بيروت", "مبادرة القاهرة", "مبادرة الملك حسين"], correct: 0 },
+            { "q": "من هو وزير الخارجية الأمريكي الذي قاد المكوكية بعد حرب 1973؟", options: ["هنري كيسنجر", "جون كيري", "مايك بومبيو", "أنطوني بلينكن"], correct: 0 },
+            { "q": "ما هو اسم القرار الأممي الذي أوقف القتال في حرب لبنان الثانية 2006؟", options: ["قرار مجلس الأمن 1701", "قرار 242", "قرار 338", "قرار 194"], correct: 0 },
+            { "q": "متى تأسست حركة التحرير الوطني الفلسطيني (فتح) رسمياً؟", options: ["1 يناير 1965", "15 مايو 1948", "1964", "1987"], correct: 0 },
+            { "q": "من هو أبرز مؤسسي حركة فتح ورئيسها الراحل؟", options: ["ياسر عرفات (أبو عمار)", "محمود عباس", "أحمد الشقيري", "خليل الوزير"], correct: 0 },
+            { "q": "من هو مؤسس الجبهة الديمقراطية لتحرير فلسطين سنة 1969؟", options: ["نايف حواتمة", "جورج حبش", "أحمد جبريل", "ياسر عرفات"], correct: 0 },
+            { "q": "في أي عام تم تأسيس منظمة الصاعقة الفلسطينية؟", options: ["1968 م", "1965 م", "1970 م", "1964 م"], correct: 0 },
+            { "q": "من هو مؤسس منظمة الصاعقة الفلسطينية؟", options: ["زهير محسن", "أحمد جبريل", "جورج حبش", "نايف حواتمة"], correct: 0 },
+            { "q": "ما اسم العملية الفدائية التي نفذتها منظمة أيلول الأسود في أولمبياد ميونخ سنة 1972؟", options: ["عملية ميونخ / عملية أيلول الأسود", "عملية الوادي", "عملية الساحل", "عملية ديماس"], correct: 0 },
+            { "q": "في أي عام حدثت أحداث أيلول الأسود بين المقاومة الفلسطينية والجيش الأردني؟", options: ["1970 م", "1968 م", "1973 م", "1982 م"], correct: 0 },
+            { "q": "ما هو اسم الاتفاقية التي أنهت أحداث أيلول الأسود بين الأردن والمنظمة؟", options: ["اتفاقية القاهرة 1970", "اتفاقية أوسلو", "اتفاقية عمّان", "اتفاقية طابا"], correct: 0 },
+            { "q": "متى انتقلت قيادة منظمة التحرير الفلسطينية من الأردن إلى لبنان؟", options: ["1971 م", "1970 م", "1975 م", "1967 م"], correct: 0 },
+            { "q": "ما هي المدينة اللبنانية التي اتخذتها منظمة التحرير مقراً رئيسياً لها طوال السبعينيات؟", options: ["بيروت", "صيدا", "طرابلس", "صور"], correct: 0 },
+            { "q": "في أي عام اندلعت الحرب الأهلية اللبنانية والتي كان للقضية الفلسطينية دور فيها؟", options: ["1975 م", "1982 م", "1970 م", "1969 م"], correct: 0 },
+            { "q": "من هو رئيس الوزراء اللبناني الأسبق الذي اغتيل سنة 2005 وأدى لأحداث كبرى بلبنان؟", options: ["رفيق الحريري", "رشيد كرامي", "سليم الحص", "فؤاد السنيورة"], correct: 0 },
+            { "q": "في أي عام وقعت حرب الليطاني (الاجتياح الإسرائيلي الأول لجَنوب لبنان)؟", options: ["1978 م", "1982 م", "1967 م", "2006 م"], correct: 0 },
+            { "q": "ما هو القرار الأممي الذي أُصدر عقب اجتياح 1978 ودعا لانسحاب إسرائيل وإنشاء اليونيفيل؟", options: ["قرار مجلس الأمن 425 و 426", "قرار 242", "قرار 338", "قرار 1701"], correct: 0 },
+            { "q": "ما هو اسم الشريط الحدودي الذي احتفظت به إسرائيل في جنوب لبنان عبر جيش لحد العميل حتى سنة 2000؟", options: ["منطقة الحزام الأمني / الشريط الحدودي المحتل", "خط بارليف", "خط ألون", "منطقة الهدنة"], correct: 0 },
+            { "q": "متى تم إنشاء حزب الله في لبنان لمقاومة الاحتلال الإسرائيلي؟", options: ["1982 م", "1978 م", "1987 م", "2000 م"], correct: 0 },
+            { "q": "من هو أول أمين عام لحزب الله في لبنان؟", options: ["الشيخ صبحي الطفيلي", "حسن نصر الله", "عباس الموسوي", "نعيم قاسم"], correct: 0 },
+            { "q": "من هو الأمين العام التاريخي لحزب الله الذي استشهد في غارة أواخر 2024؟", options: ["السيد حسن نصر الله", "عباس الموسوي", "صبحي الطفيلي", "عماد مغنية"], correct: 0 },
+            { "q": "ما هو اسم العملية العسكرية الإسرائيلية على لبنان سنة 1993 والمعروفة بحرب الأيام السبعة؟", options: ["عملية تصفية الحساب", "عناقيد الغضب", "الليطاني", "حمم الصيف"], correct: 0 },
+            { "q": "ما هو اسم العدوان الإسرائيلي الواسع على لبنان سنة 1996؟", options: ["عملية عناقيد الغضب", "تصفية الحساب", "الجراد الحارق", "عاصفة الشمال"], correct: 0 },
+            { "q": "ما اسم المجزرة الإسرائيلية بحق المدنيين اللبنانيين في مقر اليونيفيل بقانا سنة 1996؟", options: ["مجزرة قانا الأولى", "مجزرة قانا الثانية", "صبرا وشاتيلا", "بحر البقر"], correct: 0 },
+            { "q": "متى وقعت مجزرة قانا الثانية أثناء حرب 2006؟", options: ["يوليو 2006", "أبريل 1996", "يونيو 1982", "سبتمبر 2000"], correct: 0 },
+            { "q": "من هو وزير الخارجية الإسرائيلي الأسبق الذي هندس اتفاق أوسلو سراً؟", options: ["شمعون بيريز", "إسحاق رابين", "موسى دايان", "إيهود باراك"], correct: 0 },
+            { "q": "من هو المفاوض الفلسطيني البارز الذي ترأس وفد اتفاق أوسلو؟", options: ["محمود عباس (أبو مازن)", "أحمد قريع", "ياسر عرفات", "صائب عريقات"], correct: 0 },
+            { "q": "متى عاد ياسر عرفات إلى الأراضي الفلسطينية (غزة وأريحا) عبر اتفاق غزة أريحا أولاً؟", options: ["يوليو 1994", "سبتمبر 1993", "مايو 1994", "يناير 1996"], correct: 0 },
+            { "q": "ما هو اسم السلطة التي أُنشئت بموجب اتفاق أوسلو لإدارة الشؤون المدنية والأمنية بالفلسطينيين؟", options: ["السلطة الوطنية الفلسطينية", "منظمة التحرير", "مجلس الحكم الذاتي", "الهيئة العربية العليا"], correct: 0 },
+            { "q": "في أي عام تم إجراء أول انتخابات رئاسية وتشريعية فلسطينية؟", options: ["يناير 1996", "1994", "2000", "2006"], correct: 0 },
+            { "q": "من هو القائد العسكري لكتائب القسام الذي استشهد في عملية اغتيال بهيفا أو غزة 2002؟", options: ["صلاح شحادة", "محمد الضيف", "يحيى عياش", "أحمد الجعبري"], correct: 0 },
+            { "q": "من هو القائد العسكري المؤسس للخلية الأولى لكتائب القسام في الخليل؟", options: ["محمود أبو الهنود", "أحمد الجعبري", "صلاح شحادة", "عماد عقل"], correct: 0 },
+            { "q": "من هو القائد العسكري القسامي الأبرز الذي استشهد في شجاعية غزة سنة 1993؟", options: ["عماد عقل", "يحيى عياش", "محمود أبو الهنود", "صلاح شحادة"], correct: 0 },
+            { "q": "في أي عام تم إنشاء المجلس الوطني الفلسطيني التابع لمنظمة التحرير؟", options: ["1964 م", "1965 م", "1967 م", "1988 م"], correct: 0 },
+            { "q": "أين عقد المجلس الوطني الفلسطيني دورته التاريخية التي أعلنت الاستقلال؟", options: ["الجزائر العاصمة (الدورة 19)", "عمان", "تونس", "القاهرة"], correct: 0 },
+            { "q": "من هو الشاعر الذي صاغ كلمات إعلان وثيقة الاستقلال الفلسطيني؟", options: ["محمود درويش", "توفيق زياد", "سميح القاسم", "معين بسيسو"], correct: 0 },
+            { "q": "ما هو اسم الزعيم الوطني الفلسطيني الذي ترأس المجلس التشريعي الأسبق؟", options: ["روحي فتوح", "سليم الزعنون", "أحمد قريع", "عزام الأحمد"], correct: 0 },
+            { "q": "في أي عام حدث الانقسام السياسي والجغرافي بين الضفة الغربية وقطاع غزة؟", options: ["2007 م", "2006 م", "2005 م", "2011 م"], correct: 0 },
+            { "q": "ما هي الورقة المصرية التي قُدمت لتحقيق المصالحة الوطنية الفلسطينية؟", options: ["الورقة المصرية للمصالحة 2009", "اتفاق مكة", "اتفاق الدوحة", "اعلان الجزائر"], correct: 0 },
+            { "q": "متى أُبرم اتفاق الوفاق الوطني الفلسطيني في إطار حكومة التوافق سنة 2014؟", options: ["إبريل 2014", "مايو 2011", "فبراير 2007", "تشرين الأول 2009"], correct: 0 },
+            { "q": "ما هي المحكمة الدولية التي اعتمدت فلسطين عضواً فيها سنة 2015 لمقاضاة الاحتلال؟", options: ["المحكمة الجنائية الدولية (ICC)", "محكمة العدل الدولية", "محكمة لاهاي", "محكمة حقوق الإنسان"], correct: 0 },
+            { "q": "متى أصبحت فلسطين عضواً كامل العضوية في منظمة اليونسكو؟", options: ["أكتوبر 2011", "نوفمبر 2012", "ديسمبر 2015", "يناير 2000"], correct: 0 },
+            { "q": "ما هو اسم الحصار البري والبحري والجوي المفروض على قطاع غزة؟", options: ["حصار قطاع غزة", "الطوق الأمني", "الحصار المطبق", "المنطقة العازلة"], correct: 0 },
+            { "q": "من هو الزعيم والأسير الفلسطيني البارز المعتقل منذ سنة 2002 وعضو المركزية لحركة فتح؟", options: ["مروان البرغوثي", "أحمد سعدات", "حسن سلامة", "عبد الله البرغوثي"], correct: 0 },
+            { "q": "من هو الأمين العام لجبهة التحرير الشعبية المعتقل في سجون الاحتلال منذ 2002؟", options: ["أحمد سعدات", "مروان البرغوثي", "نايف حواتمة", "جورج حبش"], correct: 0 },
+            { "q": "ما هي المعركة التي خاضتها الحركة الأسيرة الفلسطينية عبر الامتناع عن الطعام جماعياً؟", options: ["إضراب الأمعاء الخاوية", "معركة الأحرار", "إضراب الكرامة", "صمود الجدران"], correct: 0 },
+            { "q": "ما هو اسم العملية التي تمكن فيها الأسرى الستة من انتزاع حريتهم عبر نفق جلبوع؟", options: ["نهر الحرية / نفق جلبوع (سبتمبر 2021)", "عملية الهروب الكبير", "عملية الجلبوع", "نفق الحرية"], correct: 0 },
+            { "q": "من هو الأسير البطل الذي قاد ملحمة نفق جلبوع وبات رمزاً للحرية؟", options: ["محمود العارضة", "يعقوب قادري", "زكريا الزبيدي", "أحمد العارضة"], correct: 0 },
+            { "q": "في أي عام تم إطلاق مبادرة السلام الفرنسية أو مؤتمر باريس الدولي للسلام؟", options: ["2016 م", "2014 م", "2018 م", "2020 م"], correct: 0 },
+            { "q": "ما هو اسم القرار الأممي الصادر في ديسمبر 2016 وأدان الاستيطان الإسرائيلي؟", options: ["قرار مجلس الأمن رقم 2334", "قرار 242", "قرار 338", "قرار 181"], correct: 0 },
+            { "q": "متى أعلنت الإدارة الأمريكية نقل سفارتها من تل أبيب إلى القدس المحتلة؟", options: ["ديسمبر 2017", "مايو 2018", "يناير 2017", "نوفمبر 2020"], correct: 0 },
+            { "q": "ما هو اسم الصفقة السياسية الإقليمية التي أعلنتها إدارة ترامب سنة 2020 لحل القضية؟", options: ["صفقة القرن", "السلام المبدئي", "مشروع الشرق الأوسط", "خريطة الطريق"], correct: 0 },
+            { "q": "ما هو رد الفعل الرسمي الفلسطيني الموحد على 'صفقة القرن'؟", options: ["الرفض القاطع وإعلان التحلل من الاتفاقيات", "القبول المشروط", "التفاوض المباشر", "الصمت الدبلوماسي"], correct: 0 },
+            { "q": "ما هي المدينة الفلسطينية بالضفة التي ظهرت فيها مجموعات 'عرين الأسد' المقاومة حديثاً؟", options: ["مدينة نابلس", "جنين", "طولكرم", "خليل الرحمن"], correct: 0 },
+            { "q": "ما هو اسم المجموعة المقاومة البارزة التي نشأت في مخيم جنين تزامناً مع تصاعد المقاومة؟", options: ["كتيبة جنين", "عرين الأسد", "سرايا القدس", "كتائب الأقصى"], correct: 0 },
+            { "q": "ما هو اسم الشهيد المؤسس لمجموعات عرين الأسد بنابلس؟", options: ["إبراهيم النابلسي", "جميل ابو سحلول", "جميل العموري", "توفيق جبارين"], correct: 0 },
+            { "q": "متى استشهد القائد البطل إبراهيم النابلسي في نابلس؟", options: ["أغسطس 2022", "يوليو 2021", "أكتوبر 2023", "مارس 2022"], correct: 0 },
+            { "q": "ما هي الدولة العربية التي توسطت بشكل رئيسي في صفقات تبادل الأسرى بين حماس وإسرائيل؟", options: ["جمهورية مصر العربية", "قطر", "الأردن", "السعودية"], correct: 0 },
+            { "q": "ما هو اسم صفقة تبادل الأسرى الكبرى التي تمت سنة 2011 وأفرج فيها عن أكثر من ألف أسير؟", options: ["صفقة وفاء الأحرار (شاليط)", "صفقة الأمل", "صفقة الرضوان", "تبادل الأبطال"], correct: 0 },
+            { "q": "من هو الجندي الإسرائيلي الذي أُسر في غزة واستُبدل في صفقة 2011؟", options: ["جلعاد شاليط", "رون آراد", "شاؤول آرون", "هدار غولدن"], correct: 0 },
+            { "q": "في أي عام انضمت فلسطين رسمياً إلى اتفاقيات جنيف الأربع؟", options: ["2014 م", "2012 م", "2015 م", "2011 م"], correct: 0 },
+            { "q": "ما هو اسم اللجنة العربية التي شُكلت لدعم الصمود الفلسطيني في اتفاقيات قمم عربية متعددة؟", options: ["لجنة القدس وصندوق الأقصى", "اللجنة العربية العليا", "هيئة الدعم العربي", "صندوق إعمار فلسطين"], correct: 0 },
+            { "q": "من هو الملك المغربي الذي يترأس لجنة القدس التابعة لمنظمة التعاون الإسلامي؟", options: ["الملك محمد السادس", "الملك الحسن الثاني", "الملك عبد الله", "الملك سلمان"], correct: 0 },
+            { "q": "ما هو اسم المؤسسة أو الوكالة التابعة لمنظمة التعاون الإسلامي المعنية بالقدس؟", options: ["بيت مال القدس الشريف", "وكالة بيت القدس", "هيئة إعمار الأقصى", "مؤسسة التضامن"], correct: 0 },
+            { "q": "في أي عام تم الاعتراف رسمياً بمنظمة التحرير الفلسطينية كممثل شرعي ووحيد في قمة الرباط؟", options: ["1974 م", "1964 م", "1988 م", "1993 م"], correct: 0 },
+            { "q": "من هو القائد العسكري الفلسطيني الذي اغتيل في تونس بعملية إسرائيلية بحرية جوية سنة 1988؟", options: ["خليل الوزير (أبو جهاد)", "صلاح خلف (أبو إياد)", "كمال عدوان", "كمال ناصر"], correct: 0 },
+            { "q": "من هو القائد العسكري والسياسي الذي اغتيل في بيروت سنة 1973 (عملية فردان) بجانب كمال ناصر وكمال عدوان؟", options: ["محمد يوسف النجار (أبو يوسف النجار)", "أبو جهاد", "أبو إياد", "سعد صايل"], correct: 0 },
+            { "q": "متى وقعت عملية فردان البطولية التي اغتيل فيها قادة المقاومة ببيروت؟", options: ["أبريل 1973", "مارس 1978", "يونيو 1982", "تشرين أول 1973"], correct: 0 },
+            { "q": "ما هو اسم المخيم الفلسطيني بلبنان الذي شهد معارك ضارية سنة 2007 ضد تنظيم فتح الإسلام؟", options: ["مخيم نهر البارد", "مخيم البص", "مخيم عين الحلوة", "مخيم برج البراجنة"], correct: 0 },
+            { "q": "ما هي المدينة الفلسطينية التي أُطلق عليها لقب 'عاصمة الثقافة العربية الإسلامية'؟", options: ["القدس الشريف", "غزة", "الخليل", "نابلس"], correct: 0 },
+            { "q": "ما هو اسم الوثيقة السياسية الجديدة التي أصدرتها حركة حماس سنة 2017؟", options: ["وثيقة المبادئ والسياسات العامة", "الميثاق الجديد", "إعلان الدوحة", "ورقة المصالحة"], correct: 0 },
+            { "q": "في أي عام تم توقيع إعلان الصين للمصالحة الوطنية الفلسطينية بين الفصائل؟", options: ["يوليو 2024 (إعلان بيجين)", "2023", "2021", "2017"], correct: 0 },
+            { "q": "ما هو اسم البرلمان الفلسطيني المنتخب الذي توقف عن الانعقاد منذ سنوات الانقسام؟", options: ["المجلس التشريعي الفلسطيني", "المجلس الوطني", "المجلس المركزي", "مجلس الشعب"], correct: 0 },
+            { "q": "من هو رئيس المجلس الوطني الفلسطيني الحالي؟", options: ["روحي فتوح", "سليم الزعنون", "أحمد قريع", "عزام الأحمد"], correct: 0 },
+            { "q": "ما هي المنظمة الدولية لحقوق الإنسان التي أصدرت تقارير تدين إسرائيل بارتكاب جريمة 'الفصل العنصري' (الأبارتهايد)؟", options: ["منظمة العفو الدولية (أمنستي) وهيومن رايتس ووتش", "الصليب الأحمر", "اليونيسف", "المحكمة الدولية"], correct: 0 },
+            { "q": "في أي عام تأسست وكالة الأمم المتحدة لإغاثة وتشغيل اللاجئين الفلسطينيين (الأونروا)؟", "options": ["1949 م", "1948 م", "1950 م", "1967 م"], correct: 0 },
+            { "q": "ما هو القرار الأممي الذي أنشأ وكالة الأونروا رسمياً؟", options: ["قرار الجمعية العامة رقم 302", "قرار 194", "قرار 242", "قرار 338"], correct: 0 },
+            { "q": "في أي عام عقد مؤتمر مدريد للسلام برعاية أمريكية وسوفيتية؟", options: ["1991 م", "1993 م", "1994 م", "1979 م"], correct: 0 },
+            { "q": "ما هي الدولة التي استضافت مؤتمر مدريد للسلام سنة 1991؟", options: ["إسبانيا", "الولايات المتحدة", "مصر", "سويسرا"], correct: 0 },
+            { "q": "من هو رئيس الوزراء الإسرائيلي الأسبق الذي رفض الانسحاب بمؤتمر مدريد واتسم بالتشدد؟", options: ["إسحاق شامير", "إسحاق رابين", "مناحيم بيغن", "شمعون بيريز"], correct: 0 },
+            { "q": "متى تم توقيع اتفاق غزة أريحا أولاً في القاهرة؟", options: ["مايو 1994", "سبتمبر 1993", "يناير 1996", "تشرين أول 1995"], correct: 0 },
+            { "q": "ما هو اسم المعاهدة الأمنية التي وقعتها إسرائيل والسلطة الفلسطينية برعاية أمريكية في واي بلانتيشن؟", options: ["مذكرة واي ريفر (1998)", "اتفاقية طابا", "اتفاقية أوسلو 2", "بروتوكول باريس"], correct: 0 },
+            { q: "متى عُقدت قمة كامب ديفيد الثانية بين ياسر عرفات وإيهود باراك برعاية كلينتون؟", options: ["يوليو 2000", "سبتمبر 1993", "يناير 2001", "أكتوبر 2000"], correct: 0 },
+            { q: "ما هو اسم المقترح الأمريكي للسلام الذي قُدم في ختام عهد كلينتون سنة 2000؟", options: ["معايير كلينتون", "خريطة الطريق", "صفقة القرن", "وثيقة جنيف"], correct: 0 },
+            { q: "متى عُقد مؤتمر طابا للمفاوضات النهائية بعد فشل كامب ديفيد الثانية؟", options: ["يناير 2001", "يوليو 2000", "ديسمبر 2002", "فبراير 1999"], correct: 0 },
+            { q: "ما هي المبادرة غير الرسمية للسلام التي صاغها سياسيون إسرائيليون وفلسطينيون سنة 2003؟", options: ["وثيقة جنيف للسلام", "خريطة الطريق", "مبادرة السلام العربية", "إعلان الاستقلال"], correct: 0 },
+            { q: "في أي عام تم إطلاق 'خريطة الطريق' الدولية للسلام برعاية اللجنة الرباعية؟", options: ["2003 م", "2002 م", "2005 م", "2007 م"], correct: 0 },
+            { q: "من هي الأطراف الأربعة المكونة للجنة الرباعية الدولية الخاصة بالسلام بالشرق الأوسط؟", options: ["الأمم المتحدة، الولايات المتحدة، الاتحاد الأوروبي، وروسيا", "مصر، الأردن، أمريكا، وإسرائيل", "جامعة الدول العربية ومجلس الأمن", "فرنسا، بريطانيا، أمريكا، وألمانيا"], correct: 0 },
+            { q: "ما هو اسم المبعوث الدولي الأبرز للسلام الذي ترأس اللجنة الرباعية لسنوات؟", options: ["توني بلير", "هنري كيسنجر", "جيمس بيكر", "مارتن إنديك"], correct: 0 },
+            { q: "في أي عام توفي الزعيم الفلسطيني ياسر عرفات بفرنسا بعد حصاره برام الله؟", options: ["2004 م", "2002 م", "2006 م", "1993 م"], correct: 0 },
+            { q: "من هو الخليفة المباشر لياسر عرفات في رئاسة السلطة الوطنية الفلسطينية ومنظمة التحرير؟", options: ["محمود عباس (أبو مازن)", "أحمد قريع", "روحي فتوح", "سليم الزعنون"], correct: 0 },
+            { q: "متى أُجريت الانتخابات التشريعية الفلسطينية الثانية التي فازت بها حركة حماس؟", options: ["يناير 2006", "يناير 1996", "تشرين أول 2005", "تموز 2007"], correct: 0 },
+            { q: "ما هو اسم الحكومة الفلسطينية التي تشكلت إثر فوز حماس سنة 2006 برئاسة إسماعيل هنية؟", options: ["حكومة الوحدة الوطنية / حكومة إسماعيل هنية الأولى", "حكومة الطوارئ", "حكومة سلام فياض", "حكومة الإنقاذ"], correct: 0 },
+            { q: "متى وقعت أحداث الحسم العسكري والانقسام في قطاع غزة؟", options: ["يونيو 2007", "كانون الثاني 2006", "أيلول 2000", "كانون الثاني 2005"], correct: 0 },
+            { q: "ما هو اسم إعلان المصالحة الذي وقعته الفصائل في اليمن سنة 2008؟", options: ["إعلان صنعاء", "إعلان الدوحة", "اتفاق القاهرة", "وثيقة الوفاق"], correct: 0 },
+            { q: "ما هو اتفاق المصالحة الذي وقعته فتح وحماس في القاهرة سنة 2011؟", options: ["اتفاق المصالحة الفلسطينية بالقاهرة 2011", "إعلان صنعاء", "اتفاق مكة", "ورقة الجزائر"], correct: 0 },
+            { q: "في أي عام انضمت فلسطين رسمياً إلى المحكمة الجنائية الدولية؟", options: ["2015 م", "2012 م", "2014 م", "2011 م"], correct: 0 },
+            { q: "ما هو اسم الحراك الشعبي السلمي الذي انطلق على حدود قطاع غزة في مارس 2018؟", options: ["مسيرات العودة الكبرى وكسر الحصار", "يوم الأرض", "انتفاضة الأقصى", "هبة القدس"], correct: 0 },
+            { q: "ما هو اسم الجمعة الأسبوعية الأبرز في مسيرات العودة؟", options: ["جمعة الأرض والحرية", "جمعة الغضب", "جمعة الوفاء", "جمعة الأسرى"], correct: 0 },
+            { q: "متى أعلنت فصائل المقاومة غرفة العمليات المشتركة لفصائل المقاومة في غزة؟", options: ["2018 م", "2014 م", "2021 م", "2007 م"], correct: 0 },
+            { q: "ما هو اسم العملية العسكرية التي نفذتها المقاومة رداً على العدوان في مايو 2023؟", options: ["عملية ثار الأحرار", "سيف القدس", "طوفان الأقصى", "بنيان مرصوص"], correct: 0 },
+            { q: "من هو القائد العسكري لكتائب القسام الذي يُعتبر العقل المدبر لعملية طوفان الأقصى؟", options: ["محمد الضيف (أبو خالد)", "يحيى السنوار", "إسماعيل هنية", "مروان عيسى"], correct: 0 },
+            { q: "من هو الناطق العسكري باسم كتائب الشهيد عز الدين القسام؟", options: ["أبو عبيدة", "أبو حمزة", "أبو أحمد", "أبو مجاهد"], correct: 0 },
+            { q: "من هو رئيس المكتب السياسي لحركة حماس الذي استشهد بطهران في يوليو 2024؟", options: ["إسماعيل هنية", "يحيى السنوار", "خالد مشعل", "صالح العارورى"], correct: 0 },
+            { q: "من هو خليفة إسماعيل هنية في رئاسة المكتب السياسي لحركة حماس؟", options: ["يحيى السنوار", "خالد مشعل", "موسى أبو مرزوق", "محمد ضيف"], correct: 0 },
+            { q: "متى استشهد القائد يحيى السنوار اشتباكا ومواجهة مباشرة بمحور رفح؟", options: ["أكتوبر 2024", "يوليو 2024", "نوفمبر 2023", "كانون الثاني 2024"], correct: 0 },
+            { q: "ما هي الدولة العربية التي استضافت جولات مفاوضات وقف إطلاق النار بغزة بمشاركة قطر ومصر؟", options: ["جمهورية مصر العربية ودولة قطر", "المملكة الأردنية", "سلطنة عمان", "الجزائر"], correct: 0 },
+            { q: "ما هو اسم القرار الأممي الصادر عن مجلس الأمن لوقف الحرب على غزة في صيف 2024؟", options: ["قرار مجلس الأمن رقم 2735", "قرار 242", "قرار 338", "قرار 1701"], correct: 0 }
+        ];
+
+        var cardsData = [];
+        var originalCardsData = [];
+        var letters = ["أ", "ب", "ج", "د"];
+        var currentIndex = 0;
+        var score = 0;
+        var answersState = {};
+
+        function shuffleOptions(options, correctIndex) {
+            let indices = options.map((_, i) => i);
+            for (let i = indices.length - 1; i > 0; i--) {
+                let j = Math.floor(Math.random() * (i + 1));
+                let temp = indices[i];
+                indices[i] = indices[j];
+                indices[j] = temp;
+            }
+            let shuffledOptions = indices.map(i => options[i]);
+            let newCorrectIndex = indices.indexOf(correctIndex);
+            return {
+                options: shuffledOptions,
+                correct: newCorrectIndex
+            };
+        }
+
+        function initQuizData() {
+            cardsData = rawCardsData.map(card => {
+                let cloned = JSON.parse(JSON.stringify(card));
+                let shuffled = shuffleOptions(cloned.options, cloned.correct);
+                cloned.options = shuffled.options;
+                cloned.correct = shuffled.correct;
+                return cloned;
+            });
+            originalCardsData = JSON.parse(JSON.stringify(cardsData));
+        }
+
+        const canvas = document.getElementById('drawCanvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let penActive = false;
+        let penColor = '#e11d48';
+        let penSize = 2.5;
+        let lastX = 0;
+        let lastY = 0;
+
+        function resizeCanvas() {
+            const wrapper = document.getElementById('quiz-app-wrapper');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const tCtx = tempCanvas.getContext('2d');
+            tCtx.drawImage(canvas, 0, 0);
+
+            canvas.width = wrapper.offsetWidth;
+            canvas.height = wrapper.offsetHeight;
+            
+            ctx.drawImage(tempCanvas, 0, 0);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            initQuizData();
+            resizeCanvas();
+            render();
+        });
+
+        function togglePen() {
+            penActive = !penActive;
+            const btn = document.getElementById('penToggleBtn');
+            const toolbar = document.getElementById('penToolbar');
+            
+            if (penActive) {
+                canvas.classList.add('drawing-active');
+                btn.classList.add('active');
+                btn.innerHTML = "✏️ إيقاف القلم";
+                toolbar.style.display = "flex";
+            } else {
+                canvas.classList.remove('drawing-active');
+                btn.classList.remove('active');
+                btn.innerHTML = "✏️ قلم الشرح الحقيقي";
+                toolbar.style.display = "none";
+            }
+        }
+
+        function setPenColor(color, element) {
+            penColor = color;
+            document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function setPenSize(size) {
+            penSize = parseFloat(size);
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function getPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            return {
+                x: (clientX - rect.left) * (canvas.width / rect.width),
+                y: (clientY - rect.top) * (canvas.height / rect.height)
+            };
+        }
+
+        canvas.addEventListener('mousedown', startDraw);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDraw);
+        canvas.addEventListener('mouseleave', stopDraw);
+
+        canvas.addEventListener('touchstart', (e) => { startDraw(e); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchmove', (e) => { draw(e); e.preventDefault(); }, { passive: false });
+        canvas.addEventListener('touchend', stopDraw);
+
+        function startDraw(e) {
+            if (!penActive) return;
+            isDrawing = true;
+            const pos = getPos(e);
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function draw(e) {
+            if (!isDrawing || !penActive) return;
+            const pos = getPos(e);
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = penColor;
+            ctx.lineWidth = penSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            lastX = pos.x;
+            lastY = pos.y;
+        }
+
+        function stopDraw() {
+            isDrawing = false;
+        }
+
+        function render() {
+            if (cardsData.length === 0) {
+                showResult();
+                return;
+            }
+            if (currentIndex >= cardsData.length) {
+                currentIndex = cardsData.length - 1;
+            }
+
+            var item = cardsData[currentIndex];
+            document.getElementById("q-badge").innerText = "السؤال " + (currentIndex + 1);
+            document.getElementById("q-text").innerText = item.q;
+            document.getElementById("question-count").innerText = "السؤال " + (currentIndex + 1) + " من " + cardsData.length;
+            document.getElementById("total-q-badge").innerText = cardsData.length;
+            document.getElementById("progressBar").style.width = ((currentIndex + 1) / cardsData.length * 100) + "%";
+
+            document.getElementById("btn-prev").disabled = (currentIndex === 0);
+            document.getElementById("btn-next").disabled = (currentIndex === cardsData.length - 1);
+
+            var container = document.getElementById("options-container");
+            container.innerHTML = "";
+
+            var hasAnswered = answersState.hasOwnProperty(currentIndex);
+
+            for (var idx = 0; idx < item.options.length; idx++) {
+                (function(i) {
+                    var btn = document.createElement("button");
+                    btn.className = "opt-btn";
+                    
+                    var checkHtml = "";
+                    if (hasAnswered && i === item.correct) {
+                        checkHtml = '<span class="check-mark">✔</span>';
+                    }
+
+                    btn.innerHTML = '<span class="opt-text">' + item.options[i] + '</span>' + checkHtml + '<span class="opt-letter">' + letters[i] + '</span>';
+
+                    if (hasAnswered) {
+                        btn.disabled = true;
+                        if (i === item.correct) btn.className += " correct";
+                        else if (i === answersState[currentIndex]) btn.className += " wrong";
+                    } else {
+                        btn.onclick = function() {
+                            selectOption(i);
+                        };
+                    }
+                    container.appendChild(btn);
+                })(idx);
+            }
+            resizeCanvas();
+        }
+
+        function selectOption(selectedIndex) {
+            if (answersState.hasOwnProperty(currentIndex)) return;
+            answersState[currentIndex] = selectedIndex;
+            var item = cardsData[currentIndex];
+
+            if (selectedIndex === item.correct) {
+                score++;
+                document.getElementById("score-count").innerText = "النقاط: " + score;
+            }
+            render();
+        }
+
+        function resetCurrentAnswer() {
+            if (answersState.hasOwnProperty(currentIndex)) {
+                var prevSelected = answersState[currentIndex];
+                var item = cardsData[currentIndex];
+                if (prevSelected === item.correct) {
+                    score = Math.max(0, score - 1);
+                    document.getElementById("score-count").innerText = "النقاط: " + score;
+                }
+                delete answersState[currentIndex];
+                render();
+            }
+        }
+
+        function deleteCurrentQuestion() {
+            if (confirm("هل أنت متأكد من حذف هذه الشريحة / السؤال نهائياً؟")) {
+                if (answersState.hasOwnProperty(currentIndex)) {
+                    var prevSelected = answersState[currentIndex];
+                    if (prevSelected === cardsData[currentIndex].correct) {
+                        score = Math.max(0, score - 1);
+                        document.getElementById("score-count").innerText = "النقاط: " + score;
+                    }
+                }
+                cardsData.splice(currentIndex, 1);
+                delete answersState[currentIndex];
+                var newAnswers = {};
+                var keys = Object.keys(answersState).sort(function(a,b){return a-b;});
+                for(var k=0; k<keys.length; k++) {
+                    if(keys[k] > currentIndex) {
+                        newAnswers[keys[k]-1] = answersState[keys[k]];
+                    } else if(keys[k] < currentIndex) {
+                        newAnswers[keys[k]] = answersState[keys[k]];
+                    }
+                }
+                answersState = newAnswers;
+                clearCanvas();
+
+                if (currentIndex >= cardsData.length && currentIndex > 0) {
+                    currentIndex--;
+                }
+                render();
+            }
+        }
+
+        function nextQ() {
+            if (currentIndex < cardsData.length - 1) {
+                currentIndex++;
+                clearCanvas();
+                render();
+            }
+        }
+
+        function prevQ() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                clearCanvas();
+                render();
+            }
+        }
+
+        function showResult() {
+            document.getElementById("quiz-screen").style.display = "none";
+            document.getElementById("result-screen").style.display = "block";
+            document.getElementById("final-score").innerText = score + " / " + cardsData.length;
+            var percentage = cardsData.length > 0 ? (score / cardsData.length) * 100 : 0;
+            var msg = percentage >= 90 ? "أداء استثنائي مذهل! إحاطة دقيقة وشاملة بتاريخ فلسطين والحروب العربية." :
+                      percentage >= 75 ? "مستوى ممتاز جداً! أحسنت." :
+                      "مستوى جيد، استمر في مراجعة التاريخ الفلسطيني.";
+            document.getElementById("result-message").innerText = msg;
+        }
+
+        function restartQuiz() {
+            initQuizData();
+            currentIndex = 0; score = 0;
+            answersState = {};
+            clearCanvas();
+            document.getElementById("score-count").innerText = "النقاط: 0";
+            document.getElementById("result-screen").style.display = "none";
+            document.getElementById("quiz-screen").style.display = "block";
+            render();
+        }
+
+        async function exportImage() {
+            const wasPenActive = penActive;
+            if (penActive) togglePen();
+
+            if (!answersState.hasOwnProperty(currentIndex)) {
+                answersState[currentIndex] = cardsData[currentIndex].correct;
+                render();
+            }
+
+            await document.fonts.ready;
+            html2canvas(document.getElementById("quiz-app-wrapper"), { scale: 2.5, useCORS: true }).then(canvasImg => {
+                const link = document.createElement("a");
+                link.download = `موسوعة_التاريخ_الفلسطيني_${currentIndex + 1}.png`;
+                link.href = canvasImg.toDataURL("image/png");
+                link.click();
+
+                if (wasPenActive) togglePen();
+            });
+        }
+
+        function saveModifiedFile() {
+            var fullHtml = document.documentElement.outerHTML;
+            var startMarker = "var rawCardsData = [";
+            var endMarker = "var cardsData = [];";
+            
+            var startIndex = fullHtml.indexOf(startMarker);
+            var endIndex = fullHtml.indexOf(endMarker);
+            
+            if (startIndex !== -1 && endIndex !== -1) {
+                var newScriptBlock = "var rawCardsData = " + JSON.stringify(rawCardsData, null, 4) + ";\n        var cardsData = [];";
+                fullHtml = fullHtml.substring(0, startIndex) + newScriptBlock + fullHtml.substring(endIndex + endMarker.length);
+            }
+
+            var blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+            var a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "palestine_wars_200.html";
+            a.click();
+        }
+
+        function printAllQuestionsPDF() {
+            var printWin = window.open('', '_blank');
+            var html = '<html dir="rtl"><head><title>موسوعة التاريخ الفلسطيني - 200 سؤال</title>';
+            html += '<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;800;900&display=swap" rel="stylesheet">';
+            html += '<style>body{font-family:Cairo,sans-serif;padding:20px;direction:rtl;color:#0f172a;}';
+            html += '.q-box{margin-bottom:18px;border-bottom:1px solid #cbd5e1;padding-bottom:12px;page-break-inside:avoid;}';
+            html += '.q-title{font-weight:900;font-size:16px;margin-bottom:8px;color:#071c3d;}';
+            html += '.opts{display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:14px;font-weight:700;}';
+            html += '.correct{color:#047857;font-weight:900;}';
+            html += 'h1{text-align:center;color:#071c3d;margin-bottom:25px;font-size:24px;}';
+            html += '</style></head><body>';
+            html += '<h1>موسوعة التاريخ الفلسطيني والحروب العربية (200 سؤال)<br><span style="font-size:14px;color:#475569;">إعداد: إبراهيم أبوزيد (معلم ومدرب وباحث)</span></h1>';
+
+            for (var i = 0; i < cardsData.length; i++) {
+                var item = cardsData[i];
+                html += '<div class="q-box">';
+                html += '<div class="q-title">' + (i + 1) + '. ' + item.q + '</div>';
+                html += '<div class="opts">';
+                for (var j = 0; j < item.options.length; j++) {
+                    var isCor = (j === item.correct) ? ' class="correct"' : '';
+                    html += '<div' + isCor + '>(' + letters[j] + ') ' + item.options[j] + (isCor ? ' ✔' : '') + '</div>';
+                }
+                html += '</div></div>';
+            }
+
+            html += '</body></html>';
+            printWin.document.write(html);
+            printWin.document.close();
+            printWin.focus();
+            setTimeout(function() {
+                printWin.print();
+            }, 600);
+        }
+    </script>
+
+</body>
+</html>
